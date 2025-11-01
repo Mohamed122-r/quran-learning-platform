@@ -1,40 +1,262 @@
-
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Filter, Phone, MessageCircle, Users, AlertTriangle, CheckCircle, Clock } from 'lucide-react';
-import FollowupForm from './FollowupForm';
-import './ParentFollowup.css';
+import { X, Calendar, Upload } from 'lucide-react';
 
-const ParentFollowup = () => {
-  const [followups, setFollowups] = useState([]);
-  const [filteredFollowups, setFilteredFollowups] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filters, setFilters] = useState({
-    status: 'all',
-    priority: 'all',
-    type: 'all',
-    assignedTo: 'all'
+const FollowupForm = ({ followup, onSave, onCancel }) => {
+  const [formData, setFormData] = useState({
+    student: '',
+    type: 'اتصال هاتفي',
+    subject: '',
+    message: '',
+    priority: 'متوسط',
+    status: 'معلق',
+    scheduledDate: '',
+    assignedTo: '',
+    notes: ''
   });
-  const [showForm, setShowForm] = useState(false);
-  const [editingFollowup, setEditingFollowup] = useState(null);
+
+  const [students, setStudents] = useState([]);
+  const [teachers, setTeachers] = useState([]);
 
   useEffect(() => {
-    // بيانات وهمية للمتابعات
-    const sampleFollowups = [
-      {
-        id: 'F001',
-        student: {
-          id: 'S001',
-          name: 'أحمد محمد علي',
-          class: 'الصف الثالث'
-        },
-        parent: {
-          name: 'محمد علي',
-          phone: '0512345679'
-        },
-        type: 'اتصال هاتفي',
-        subject: 'مناقشة مستوى الطالب',
-        message: 'الطالب يحتاج إلى مزيد من المتابعة في مادة القرآن الكريم',
-        priority: 'عالي',
+    // بيانات وهمية للطلاب والمعلمين
+    const sampleStudents = [
+      { id: 'S001', name: 'أحمد محمد علي', class: 'الصف الثالث' },
+      { id: 'S002', name: 'فاطمة أحمد', class: 'الصف الثاني' },
+      { id: 'S003', name: 'محمد سالم', class: 'الصف الرابع' }
+    ];
+
+    const sampleTeachers = [
+      { id: 'T001', name: 'أحمد محمد' },
+      { id: 'T002', name: 'فاطمة أحمد' },
+      { id: 'T003', name: 'محمد علي' }
+    ];
+
+    setStudents(sampleStudents);
+    setTeachers(sampleTeachers);
+
+    if (followup) {
+      setFormData({
+        student: followup.student.id,
+        type: followup.type,
+        subject: followup.subject,
+        message: followup.message,
+        priority: followup.priority,
+        status: followup.status,
+        scheduledDate: followup.scheduledDate,
+        assignedTo: followup.assignedTo.id,
+        notes: followup.notes || ''
+      });
+    } else {
+      // تعيين تاريخ افتراضي
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      setFormData(prev => ({
+        ...prev,
+        scheduledDate: tomorrow.toISOString().split('T')[0]
+      }));
+    }
+  }, [followup]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    
+    const selectedStudent = students.find(s => s.id === formData.student);
+    const selectedTeacher = teachers.find(t => t.id === formData.assignedTo);
+    
+    const followupData = {
+      ...formData,
+      student: {
+        id: selectedStudent.id,
+        name: selectedStudent.name,
+        class: selectedStudent.class
+      },
+      assignedTo: {
+        id: selectedTeacher.id,
+        name: selectedTeacher.name
+      },
+      parent: {
+        name: 'محمد علي', // بيانات وهمية
+        phone: '0512345678'
+      }
+    };
+
+    onSave(followupData);
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content large">
+        <div className="modal-header">
+          <h2>{followup ? 'تعديل المتابعة' : 'إضافة متابعة جديدة'}</h2>
+          <button className="close-btn" onClick={onCancel}>
+            <X size={20} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="followup-form">
+          <div className="form-grid">
+            <div className="form-group">
+              <label>الطالب *</label>
+              <select
+                name="student"
+                value={formData.student}
+                onChange={handleChange}
+                required
+              >
+                <option value="">اختر الطالب</option>
+                {students.map(student => (
+                  <option key={student.id} value={student.id}>
+                    {student.name} - {student.class}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>نوع المتابعة *</label>
+              <select
+                name="type"
+                value={formData.type}
+                onChange={handleChange}
+                required
+              >
+                <option value="اتصال هاتفي">اتصال هاتفي</option>
+                <option value="رسالة نصية">رسالة نصية</option>
+                <option value="اجتماع">اجتماع</option>
+                <option value="تقرير أداء">تقرير أداء</option>
+                <option value="تنبيه">تنبيه</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>الأولوية *</label>
+              <select
+                name="priority"
+                value={formData.priority}
+                onChange={handleChange}
+                required
+              >
+                <option value="منخفض">منخفض</option>
+                <option value="متوسط">متوسط</option>
+                <option value="عالي">عالي</option>
+                <option value="عاجل">عاجل</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>الحالة *</label>
+              <select
+                name="status"
+                value={formData.status}
+                onChange={handleChange}
+                required
+              >
+                <option value="معلق">معلق</option>
+                <option value="مكتمل">مكتمل</option>
+                <option value="ملغي">ملغي</option>
+                <option value="مؤجل">مؤجل</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>المكلف بالمتابعة *</label>
+              <select
+                name="assignedTo"
+                value={formData.assignedTo}
+                onChange={handleChange}
+                required
+              >
+                <option value="">اختر المعلم</option>
+                {teachers.map(teacher => (
+                  <option key={teacher.id} value={teacher.id}>
+                    {teacher.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>التاريخ المجدول *</label>
+              <div className="date-input">
+                <Calendar size={18} />
+                <input
+                  type="date"
+                  name="scheduledDate"
+                  value={formData.scheduledDate}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>موضوع المتابعة *</label>
+            <input
+              type="text"
+              name="subject"
+              value={formData.subject}
+              onChange={handleChange}
+              placeholder="أدخل موضوع المتابعة..."
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>نص المتابعة *</label>
+            <textarea
+              name="message"
+              value={formData.message}
+              onChange={handleChange}
+              placeholder="أدخل نص المتابعة..."
+              rows="4"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label>ملاحظات إضافية</label>
+            <textarea
+              name="notes"
+              value={formData.notes}
+              onChange={handleChange}
+              placeholder="أدخل أي ملاحظات إضافية..."
+              rows="3"
+            />
+          </div>
+
+          <div className="form-group">
+            <label>المرفقات</label>
+            <div className="file-upload">
+              <Upload size={18} />
+              <span>انقر لرفع الملفات</span>
+              <input type="file" multiple style={{ display: 'none' }} />
+            </div>
+          </div>
+
+          <div className="form-actions">
+            <button type="button" className="btn-cancel" onClick={onCancel}>
+              إلغاء
+            </button>
+            <button type="submit" className="btn-save">
+              {followup ? 'تحديث' : 'حفظ'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default FollowupForm;        priority: 'عالي',
         status: 'معلق',
         scheduledDate: '2024-01-20',
         assignedTo: {
