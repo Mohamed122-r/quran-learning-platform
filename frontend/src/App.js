@@ -1,40 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Sidebar from './components/Shared/Sidebar';
+import Dashboard from './components/Dashboard/Dashboard';
+import StudentManagement from './components/Students/StudentManagement';
+import TeacherManagement from './components/Teachers/TeacherManagement';
+import CourseManagement from './components/Courses/CourseManagement';
+import Attendance from './components/Attendance/Attendance';
+import Grades from './components/Grades/Grades';
+import Reports from './components/Reports/Reports';
+import Settings from './components/Settings/Settings';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import './App.css';
 
-const QuranLearningPlatform = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [students, setStudents] = useState([
-    { id: 'S001', name: 'أحمد محمد علي', class: 'الصف الثالث', status: 'نشط' },
-    { id: 'S002', name: 'فاطمة أحمد', class: 'الصف الثاني', status: 'نشط' },
-    { id: 'S003', name: 'محمد سالم', class: 'الصف الرابع', status: 'نشط' },
-    { id: 'S004', name: 'عائشة علي', class: 'الصف الأول', status: 'نشط' }
-  ]);
-
-  const stats = {
-    totalStudents: 1247,
-    activeTeachers: 89,
-    availableCourses: 156,
-    attendanceRate: 94
-  };
+function App() {
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   return (
-    <div className="app">
-      {/* الشريط الجانبي */}
-      <div className="sidebar">
-        <h2>نظام إدارة تعليمي</h2>
-        <nav>
-          <button 
-            className={activeTab === 'dashboard' ? 'active' : ''}
-            onClick={() => setActiveTab('dashboard')}
-          >
-            لوحة التحكم
-          </button>
-          <button 
-            className={activeTab === 'students' ? 'active' : ''}
-            onClick={() => setActiveTab('students')}
-          >
-            إدارة الطلاب
-          </button>
+    <Router>
+      <div className="app">
+        <Sidebar 
+          isOpen={sidebarOpen} 
+          onToggle={() => setSidebarOpen(!sidebarOpen)} 
+        />
+        
+        <div className={`main-content ${sidebarOpen ? 'sidebar-open' : 'sidebar-closed'}`}>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/students" element={<StudentManagement />} />
+            <Route path="/teachers" element={<TeacherManagement />} />
+            <Route path="/courses" element={<CourseManagement />} />
+            <Route path="/attendance" element={<Attendance />} />
+            <Route path="/grades" element={<Grades />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/settings" element={<Settings />} />
+          </Routes>
+        </div>
+        
+        <ToastContainer 
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={true}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
+      </div>
+    </Router>
+  );
+}
+
+export default App;          </button>
           <button 
             className={activeTab === 'teachers' ? 'active' : ''}
             onClick={() => setActiveTab('teachers')}
